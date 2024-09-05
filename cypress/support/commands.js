@@ -22,8 +22,13 @@
 //
 //
 // -- This will overwrite an existing command --
-// Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 
+import Login from "./PageObjects/LoginPage";
+import Dashboard from "./PageObjects/DashboardPage";
+
+// Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
+const loginPage = new Login()
+const dashboard = new Dashboard()
 /// <reference types="cypress" />
 Cypress.on('uncaught:exception', (err, runnable) => {
     return false;
@@ -32,3 +37,22 @@ Cypress.on('uncaught:exception', (err, runnable) => {
 Cypress.Commands.add("waitTillVisible",(selector,timeout=10000)=>{
     cy.get(selector,{timeout}).should("be.visible")
 });
+
+Cypress.Commands.add('orangeHRMLogin', (uname, password) => {
+  cy.session([uname, password], () => {
+    cy.visit('/')
+    loginPage.enterUsername(uname)
+      .enterPassword(password)
+      .clickLoginButton()
+
+  },
+    {
+      cacheAcrossSpecs: true
+    }
+  )
+})
+
+Cypress.Commands.add('LoginAndVisitDashboard', (username, password) => {
+  cy.orangeHRMLogin(username, password)
+  cy.visit("/")
+})
