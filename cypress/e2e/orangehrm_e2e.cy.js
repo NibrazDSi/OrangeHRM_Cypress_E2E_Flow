@@ -37,8 +37,12 @@ describe('OrangeHRM End to End Testing', () => {
     //click on Add Button
     cy.get("button[type='button']").contains("Add").click()
     cy.waitTillVisible('h6')
-
-    // Create a new employee using Faker
+    // Extract the Employee ID.
+    var employeeID = ""
+    cy.get('label').contains("Employee Id").parent().siblings('div').find('input').invoke("val").then((value)=>{
+      employeeID = value
+    }).then(()=>{
+       // Create a new employee using Faker
     const firstName = faker.name.firstName();
     const lastName = faker.name.lastName();
     const fullName = firstName+" "+lastName
@@ -64,8 +68,23 @@ describe('OrangeHRM End to End Testing', () => {
     // Save Employee Details to a file
     cy.writeFile(`cypress/fixtures/${employeeDataFile}`,{
       username,
-      password
+      password,
+      employeeID
     });
+    // Click On Employee List and search by Employee ID
+    cy.get("li a").contains("Employee List").click()
+    cy.waitTillVisible('h6')
+    cy.fixture(employeeDataFile).then((employee)=>{
+      cy.get('label').contains("Employee Id").parent().siblings('div').find('input').type(employee.employeeID)
+      cy.get("button[type='submit']").click()
+      //Assert the firstName of the Employee is showing.
+      cy.get("div[role='cell'] div").contains(firstName).invoke('text')
+      .then((text) => {
+        const expectedText = text.replace(/\s+/g, ' ').trim(); // Collapse multiple spaces into one and trim
+        expect(expectedText).to.eq(firstName);
+      });
+    })
+   
 
     // Click On the Directory Menu
     cy.get("span").contains("Directory").click()
@@ -100,6 +119,21 @@ describe('OrangeHRM End to End Testing', () => {
       cy.get("[type='submit']").click()
       // Assert that the Newly Created Employee Full Name is showing beside the profile icon.
       cy.get("p.oxd-userdropdown-name").should("have.text",fullName)
+      // Navigate to My Info
+      cy.get("span").contains("My Info").click()
+      cy.waitTillVisible("h6")
+      cy.scrollTo(0, 600); // Scrolls down 600 pixels from the top
+      // Click on the Male Gender Radio button
+      cy.get("label").contains("Male").click()
+      // Click on the blood type dropdown
+      cy.get("label").contains("Blood Type").parent().siblings("div").click()
+      // Select a blood Group
+      cy.get('.oxd-select-dropdown > :nth-child(4)').click()
+      cy.get("button[type='submit']").eq(1).click()
+    // Assert the Employee Successfully Saved Message
+    cy.get('.oxd-text--toast-message').should("have.text", "Successfully Saved")
+    })
+
     })
   });
 
