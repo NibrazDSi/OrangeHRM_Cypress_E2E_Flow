@@ -25,6 +25,7 @@
 
 import Login from "./PageObjects/LoginPage";
 import Dashboard from "./PageObjects/DashboardPage";
+import addContext from 'mochawesome/addContext';
 
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 const loginPage = new Login()
@@ -55,4 +56,14 @@ Cypress.Commands.add('orangeHRMLogin', (uname, password) => {
 Cypress.Commands.add('LoginAndVisitDashboard', (username, password) => {
   cy.orangeHRMLogin(username, password)
   cy.visit("/")
+})
+
+/**
+ * Steps for reportportal and mochawesome reports
+ * @param {String} testname
+ * @param {String} message
+ */
+Cypress.Commands.add('testDescription', (message) => {
+  cy.log(message)
+  cy.once('test:after:run', (test) => addContext({ test }, message));
 })
